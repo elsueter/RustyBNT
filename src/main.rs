@@ -1,71 +1,51 @@
-type ChildNode<T> = Option<Box<BTNode<T>>>;
+mod boolean_tree;
 
-enum Op<T> {
-    And,
-    Or,
-    Id(T)
-}
+pub struct Node{pub tree: boolean_tree::BooleanTree<bool>}
 
-struct BTNode<T> {
-    left: ChildNode<T>,
-    right: ChildNode<T>,
-    op: Op<T>
-}
-
-impl BTNode<bool> {
-    pub fn new(op: Op<bool>, l: BTNode<bool>, r: BTNode<bool>) -> Self {
-        BTNode::<bool>{
-            op: op, left: Some(Box::new(l)), right: Some(Box::new(r))
-        }
-    }
-}
-
-fn AndNode(l: BTNode<bool>, r: BTNode<bool>) -> BTNode<bool> {BTNode::new(Op::And, l, r)}
-fn OrNode(l: BTNode<bool>, r: BTNode<bool>) -> BTNode<bool> {BTNode::new(Op::Or, l, r)}
-fn IdNode(value: bool) -> BTNode<bool> {BTNode{op: Op::Id(value), left: None, right: None}}
-fn NotNode(value: bool) -> BTNode<bool> {IdNode(!value)}
-
-struct BooleanTree<T> {
-    head: Option<BTNode<T>>
-}
-
-impl BooleanTree<bool> {
-    pub fn new(head: BTNode<bool>) -> Self {BooleanTree::<bool>{head: Some(head)}}
-
-    pub fn collapse(node: &Box<BTNode<bool>>) -> bool {
-        let mut l: Option<bool> = None;
-        let mut r: Option<bool> = None;
-
-        if let Some(left) = &node.left {
-            l = Some(BooleanTree::collapse(left));
-        }
-
-        if let Some(right) = &node.right {
-            r = Some(BooleanTree::collapse(right));
-        }
-
-        let l = if let Some(x) = l{x} else {false};
-        let r = if let Some(x) = r{x} else {false};
-
-        match node.op {
-            Op::And => {l & r}
-            Op::Or => {l | r}
-            Op::Id(x) => x, 
-        }
-    }
+impl Node{
+    pub fn new(in_tree: boolean_tree::BooleanTree<bool>) -> Node {Node{tree: in_tree}}
 }
 
 fn main() {
-    
-    let bt = BooleanTree::new(
-        AndNode(
-            IdNode(true),
-            IdNode(true)
+    // F(A) = !B & C | D
+    let node_a = boolean_tree::BooleanTree::new(
+        boolean_tree::and_node(
+            boolean_tree::not_val_node(false, 1),
+            boolean_tree::or_node(
+                boolean_tree::val_node(false, 2),
+                boolean_tree::val_node(false, 3)
+            )
         )
     );
-    
 
-    println!("{}", BooleanTree::collapse(
-        &Box::new(bt.head.expect("No head initialized.")))
-    )
+    // F(B) = A & D
+    let node_b = boolean_tree::BooleanTree::new(
+        boolean_tree::and_node(
+            boolean_tree::val_node(false, 0),
+            boolean_tree::val_node(false, 3)
+        )
+    );
+
+    // F(C) = B
+    let node_c = boolean_tree::BooleanTree::new(
+        boolean_tree::val_node(false, 1)
+    );
+
+    // F(D) = !A | D
+    let node_d = boolean_tree::BooleanTree::new(
+        boolean_tree::or_node(
+            boolean_tree::not_val_node(false, 0),
+            boolean_tree::val_node(false, 3)
+        )
+    );
+
+    let temp_1 = Node::new(node_a);
+
+    let mut temp_2 : Vec<Node> = Vec::new();
+
+    temp_2.push(temp_1);
+    
+    let temp_3 = &temp_2[0];
+
+    println!("{}", temp_3.tree.resolve());
 }
