@@ -1,5 +1,5 @@
 #[derive(Clone)]
-enum Op<T>{
+pub enum Op<T>{
     And,
     Or,
     Val(T)
