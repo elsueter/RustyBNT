@@ -1,51 +1,42 @@
-mod boolean_tree;
-
-pub struct Node{pub tree: boolean_tree::BooleanTree<bool>}
-
-impl Node{
-    pub fn new(in_tree: boolean_tree::BooleanTree<bool>) -> Node {Node{tree: in_tree}}
-}
+mod tree;
 
 fn main() {
     // F(A) = !B & C | D
-    let node_a = boolean_tree::BooleanTree::new(
-        boolean_tree::and_node(
-            boolean_tree::not_val_node(false, 1),
-            boolean_tree::or_node(
-                boolean_tree::val_node(false, 2),
-                boolean_tree::val_node(false, 3)
+    let node_a = tree::BooleanTree::new(
+        tree::and_node(
+            tree::not_val_node(false, 1),
+            tree::or_node(
+                tree::val_node(false, 2),
+                tree::val_node(false, 3)
             )
         )
     );
 
     // F(B) = A & D
-    let node_b = boolean_tree::BooleanTree::new(
-        boolean_tree::and_node(
-            boolean_tree::val_node(false, 0),
-            boolean_tree::val_node(false, 3)
+    let node_b = tree::BooleanTree::new(
+        tree::and_node(
+            tree::val_node(false, 0),
+            tree::val_node(false, 3)
         )
     );
 
     // F(C) = B
-    let node_c = boolean_tree::BooleanTree::new(
-        boolean_tree::val_node(false, 1)
+    let node_c = tree::BooleanTree::new(
+        tree::val_node(false, 1)
     );
 
     // F(D) = !A | D
-    let node_d = boolean_tree::BooleanTree::new(
-        boolean_tree::or_node(
-            boolean_tree::not_val_node(false, 0),
-            boolean_tree::val_node(false, 3)
+    let node_d = tree::BooleanTree::new(
+        tree::or_node(
+            tree::not_val_node(false, 0),
+            tree::val_node(false, 3)
         )
     );
 
-    let temp_1 = Node::new(node_a);
+    let mut temp: Vec<tree::BooleanTree<bool>> = Vec::new();
 
-    let mut temp_2 : Vec<Node> = Vec::new();
+    temp.push(node_a);
 
-    temp_2.push(temp_1);
-    
-    let temp_3 = &temp_2[0];
+    println!("{}", temp[0].resolve());
 
-    println!("{}", temp_3.tree.resolve());
 }
