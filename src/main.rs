@@ -52,7 +52,7 @@ fn main() {
     let mut temp: Vec<tree::BooleanTree<bool>> = Vec::from([node_a]);
 
     for node in temp.iter(){
-        node.resolve();
+        println!("{}", node.resolve());
     };
 
 }
