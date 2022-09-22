@@ -6,7 +6,7 @@ fn main() {
         tree::and_node(
             tree::not_val_node(false, 1),
             tree::or_node(
-                tree::val_node(false, 2),
+                tree::val_node(true, 2),
                 tree::val_node(false, 3)
             )
         )

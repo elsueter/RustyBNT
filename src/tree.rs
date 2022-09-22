@@ -30,18 +30,18 @@ impl BooleanTree<bool>{
     pub fn new(in_node: Node<bool>) -> BooleanTree<bool> {BooleanTree{root: in_node}}
 
     pub fn resolve(&self) -> bool {
-        Self::resolve_node(Box::new(self.root.clone()))
+        Self::resolve_node(Box::new(&self.root))
     }
 
-    fn resolve_node(cur_node: Box<Node<bool>>) -> bool {
+    fn resolve_node(cur_node: Box<&Node<bool>>) -> bool {
         let mut l: Option<bool> = None;
         let mut r: Option<bool> = None;
 
-        if let Some(left) = cur_node.left {
-            l = Some(BooleanTree::resolve_node(left));
+        if let Some(left) = &cur_node.left {
+            l = Some(BooleanTree::resolve_node(Box::new(&(*left))));
         }
-        if let Some(right) = cur_node.right {
-            r = Some(BooleanTree::resolve_node(right));
+        if let Some(right) = &cur_node.right {
+            r = Some(BooleanTree::resolve_node(Box::new(&(*right))));
         }
 
         let l: bool = if let Some(x) = l{x} else{false};
