@@ -37,6 +37,7 @@ impl BooleanTree<bool>{
         let mut l: Option<bool> = None;
         let mut r: Option<bool> = None;
 
+        //TODO - see about removing need for let and Box::new -> extra memory usage
         if let Some(left) = &cur_node.left {
             l = Some(BooleanTree::resolve_node(Box::new(&(*left))));
         }
@@ -44,6 +45,7 @@ impl BooleanTree<bool>{
             r = Some(BooleanTree::resolve_node(Box::new(&(*right))));
         }
 
+        //TODO - see if nicer way to tell if Op is filled in -> extra memory usage
         let l: bool = if let Some(x) = l{x} else{false};
         let r: bool = if let Some(x) = r{x} else{false};
 
