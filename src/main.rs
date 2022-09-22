@@ -6,7 +6,7 @@ fn main() {
         tree::and_node(
             tree::not_val_node(false, 1),
             tree::or_node(
-                tree::val_node(true, 2),
+                tree::val_node(false, 2),
                 tree::val_node(false, 3)
             )
         )
@@ -33,10 +33,18 @@ fn main() {
         )
     );
 
-    let mut temp: Vec<tree::BooleanTree<bool>> = Vec::new();
+    let mut temp: Vec<tree::BooleanTree<bool>> = Vec::from([node_a, node_b, node_c, node_d]);
 
-    temp.push(node_a);
+    use std::time::Instant;
+    let now = Instant::now();
 
-    println!("{}", temp[0].resolve());
+    for i in 0..1000{
+        for node in temp.iter(){
+            println!("{}", node.resolve());
+        }
+    }
+
+    let elapsed = now.elapsed();
+    println!("Elapsed: {:.2?}", elapsed);
 
 }
