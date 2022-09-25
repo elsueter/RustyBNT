@@ -1,7 +1,8 @@
 pub enum Op<T>{
     And,
     Or,
-    Val(T)
+    Val(T),
+    Not_Val(T)
 }
 
 pub struct Node<'a, T>{
@@ -52,6 +53,20 @@ impl Node<'_, bool>{
                         buffer[layer+1].push_str(&"   ".to_string());
                     }
                 }
+            },
+            Op::Not_Val(x) => {
+                if let Some(value) = self.name{ 
+                    curr.push_str(&format!("!{}", value));
+                }else{
+                    curr.push_str(&"".to_string());
+                }
+                if(lr){
+                    if(buffer.len() < layer+2){
+                        buffer.push("    ".to_string());
+                    }else{
+                        buffer[layer+1].push_str(&"    ".to_string());
+                    }
+                }
             }
         }
         buffer[layer].push_str(&curr);
@@ -79,7 +94,7 @@ pub fn val_node(in_val: bool, in_name: u8) -> Node<'static, bool> {
     Node::<bool>{op: Op::Val(in_val), left: None, right: None, name: Some(in_name)}
 }
 pub fn not_val_node(in_val: bool, in_name: u8) -> Node<'static, bool> {
-    Node::<bool>{op: Op::Val(!in_val), left: None, right: None, name: Some(in_name)}
+    Node::<bool>{op: Op::Not_Val(!in_val), left: None, right: None, name: Some(in_name)}
 }
 
 pub struct BooleanTree<'a, T>{root: Node<'a, T>}
@@ -113,7 +128,7 @@ impl BooleanTree<'_, bool>{
         match cur_node.op{
             Op::And => {l & r},
             Op::Or => {l | r},
-            Op::Val(x) => x
+            Op::Val(x) | Op::Not_Val(x) => x
         }
     }
 
@@ -121,9 +136,10 @@ impl BooleanTree<'_, bool>{
 
     }
 
-    pub fn print_tree(&self){
+    pub fn print_tree(&self, index: usize){
         let mut buffer = Vec::new();
         buffer = self.root.print(buffer, 0, true);
+        println!("Node: {}", index);
         for layer in buffer.iter(){
             println!("{}", layer);
         }

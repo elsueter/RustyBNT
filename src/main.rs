@@ -13,6 +13,21 @@ fn main() {
     //         )
     //     )
     // );
+    
+    let x = &tree::not_val_node(false, 1);
+    let y = &tree::val_node(false, 2);
+    let z = &tree::val_node(false, 3);
+    let x1 = &tree::or_node(
+        y,
+        z
+    );
+    // F(A) = !B & C | D
+    let mut node_a = tree::BooleanTree::new(
+        tree::and_node(
+            x,
+            x1
+        )
+    );
 
     // // F(B) = A & D
     // let node_b = tree::BooleanTree::new(
@@ -21,11 +36,26 @@ fn main() {
     //         tree::val_node(false, 3)
     //     )
     // );
+    
+    let x = &tree::val_node(false, 0);
+    let y = &tree::val_node(false, 3);
+    // F(A) = !B & C | D
+    let mut node_b = tree::BooleanTree::new(
+        tree::and_node(
+            x,
+            y
+        )
+    );
 
     // // F(C) = B
     // let node_c = tree::BooleanTree::new(
     //     tree::val_node(false, 1)
     // );
+
+    // F(A) = !B & C | D
+    let mut node_c = tree::BooleanTree::new(
+        tree::val_node(false, 1)
+    );
 
     // // F(D) = !A | D
     // let node_d = tree::BooleanTree::new(
@@ -35,27 +65,22 @@ fn main() {
     //     )
     // );
     
-    let x = &tree::not_val_node(true, 1);
-    let y = &tree::val_node(true, 2);
-    let z = &tree::val_node(false, 3);
-    let x1 = &tree::or_node(
-        y,
-        z
-    );
-    let x2 = &tree::and_node(
-        x1,
-        x1
-    );
+    let x = &tree::not_val_node(false, 0);
+    let y = &tree::val_node(false, 3);
     // F(A) = !B & C | D
-    let mut node_a = Box::new(
-        tree::BooleanTree::new(
-            tree::and_node(
-                x2,
-                x1
-            )
+    let mut node_d = tree::BooleanTree::new(
+        tree::or_node(
+            x,
+            y
         )
     );
 
-    node_a.print_tree();
+    let mut network = Vec::from([node_a, node_b, node_c, node_d]);
+
+    for (i, node) in network.iter().enumerate(){
+        node.print_tree(i);
+    }
+
+    println!("{}", network[0].resolve());
 
 }
