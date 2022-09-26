@@ -14,16 +14,16 @@ fn main() {
     //     )
     // );
     
-    let x = &tree::not_val_node(false, 1);
-    let y = &tree::val_node(false, 2);
-    let z = &tree::val_node(false, 3);
-    let x1 = &tree::or_node(
+    let x = &tree::Node::not_val_node(false, 1);
+    let y = &tree::Node::val_node(false, 2);
+    let z = &tree::Node::val_node(false, 3);
+    let x1 = &tree::Node::or_node(
         y,
         z
     );
     // F(A) = !B & C | D
     let mut node_a = tree::BooleanTree::new(
-        tree::and_node(
+        tree::Node::and_node(
             x,
             x1
         )
@@ -37,11 +37,11 @@ fn main() {
     //     )
     // );
     
-    let x = &tree::val_node(false, 0);
-    let y = &tree::val_node(false, 3);
+    let x = &tree::Node::val_node(false, 0);
+    let y = &tree::Node::val_node(false, 3);
     // F(A) = !B & C | D
     let mut node_b = tree::BooleanTree::new(
-        tree::and_node(
+        tree::Node::and_node(
             x,
             y
         )
@@ -54,7 +54,7 @@ fn main() {
 
     // F(A) = !B & C | D
     let mut node_c = tree::BooleanTree::new(
-        tree::val_node(false, 1)
+        tree::Node::val_node(false, 1)
     );
 
     // // F(D) = !A | D
@@ -65,11 +65,11 @@ fn main() {
     //     )
     // );
     
-    let x = &tree::not_val_node(false, 0);
-    let y = &tree::val_node(false, 3);
+    let x = &tree::Node::not_val_node(false, 0);
+    let y = &tree::Node::val_node(false, 3);
     // F(A) = !B & C | D
     let mut node_d = tree::BooleanTree::new(
-        tree::or_node(
+        tree::Node::or_node(
             x,
             y
         )
@@ -77,10 +77,10 @@ fn main() {
 
     let mut network = Vec::from([node_a, node_b, node_c, node_d]);
 
-    for (i, node) in network.iter().enumerate(){
-        node.print_tree(i);
+    for node in network.iter(){
+        println!("{}", node.to_str());
+        println!("{}", node.to_json());
+        println!("{}", node.to_exp());
+        println!("{}", node.resolve());
     }
-
-    println!("{}", network[0].resolve());
-
 }

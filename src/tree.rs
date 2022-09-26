@@ -1,19 +1,23 @@
+use serde::{Serialize, Deserialize};
+use serde_json::{json, Value};
+
+#[derive(Serialize, Deserialize)]
 pub enum Op<T>{
     And,
     Or,
-    Val(T),
-    Not_Val(T)
+    Val(T)
 }
 
 pub struct Node<'a, T>{
     op: Op<T>,
-    left: Option<Box<&'a Node<'a, T>>>,
-    right: Option<Box<&'a Node<'a, T>>>,
+    left: Option<&'a Node<'a, T>>,
+    right: Option<&'a Node<'a, T>>,
     name: Option<u8>
 }
 
 impl Node<'_, bool>{
-    fn print(&self, mut buffer: Vec<String>, layer: usize, lr: bool) -> Vec<String>{
+
+    fn to_str(&self, mut buffer: Vec<String>, layer: usize, lr: bool) -> Vec<String>{
 
         let mut curr = "".to_string();
 
@@ -53,58 +57,96 @@ impl Node<'_, bool>{
                         buffer[layer+1].push_str(&"   ".to_string());
                     }
                 }
-            },
-            Op::Not_Val(x) => {
-                if let Some(value) = self.name{ 
-                    curr.push_str(&format!("!{}", value));
-                }else{
-                    curr.push_str(&"".to_string());
-                }
-                if(lr){
-                    if(buffer.len() < layer+2){
-                        buffer.push("    ".to_string());
-                    }else{
-                        buffer[layer+1].push_str(&"    ".to_string());
-                    }
-                }
             }
         }
         buffer[layer].push_str(&curr);
 
         //TODO - see about new implementation without needing `let`
         if let Some(left) = &self.left {
-            buffer = left.print(buffer, layer+1, true);
+            buffer = left.to_str(buffer, layer+1, true);
         }
         //TODO - see about new implementation without needing `let`
         if let Some(right) = &self.right {
-            buffer = right.print(buffer, layer+1, false);
+            buffer = right.to_str(buffer, layer+1, false);
         }
 
         return buffer;
     }
-}
 
-pub fn and_node<'a>(l: &'a Node<'a, bool>, r: &'a Node<'a, bool>) -> Node<'a, bool> {
-    Node::<bool>{op: Op::And, left: Some(Box::new(l)), right: Some(Box::new(r)), name: None}
-}
-pub fn or_node<'a>(l: &'a Node<'a, bool>, r: &'a Node<'a, bool>) -> Node<'a, bool> {
-    Node::<bool>{op: Op::Or, left: Some(Box::new(l)), right: Some(Box::new(r)), name: None}
-}
-pub fn val_node(in_val: bool, in_name: u8) -> Node<'static, bool> {
-    Node::<bool>{op: Op::Val(in_val), left: None, right: None, name: Some(in_name)}
-}
-pub fn not_val_node(in_val: bool, in_name: u8) -> Node<'static, bool> {
-    Node::<bool>{op: Op::Not_Val(!in_val), left: None, right: None, name: Some(in_name)}
+    fn to_json(&self) -> Value{
+
+        let l;
+
+        if let Some(x) = self.left{
+            l = x.to_json();
+        }else{
+            return json!({
+                "op": self.op,
+                "name": self.name
+            })
+        }
+
+        let r;
+
+        if let Some(x) = self.right{
+            r = x.to_json();
+        }else{
+            return json!({
+                "op": self.op,
+                "name": self.name
+            })
+        }
+
+        json!({
+            "op": self.op,
+            "left": l,
+            "right": r
+        })
+    }
+
+    fn to_exp(&self) -> String{
+
+        let l;
+
+        if let Some(x) = self.left{
+            l = x.to_exp();
+        }else{
+            l = "".to_string();
+        }
+
+        let r;
+
+        if let Some(x) = self.right{
+            r = x.to_exp();
+        }else{
+            r = "".to_string();
+        }
+
+        match self.op{
+            Op::And => format!("{}&{}", l, r),
+            Op::Or => format!("{}|{}", l, r),
+            Op::Val(x) => self.name.unwrap().to_string()
+        }
+    }
+
+    pub fn and_node<'a>(l: &'a Node<'a, bool>, r: &'a Node<'a, bool>) -> Node<'a, bool> {Node::<bool>{op: Op::And, left: Some(l), right: Some(r), name: None}}
+    pub fn or_node<'a>(l: &'a Node<'a, bool>, r: &'a Node<'a, bool>) -> Node<'a, bool> {Node::<bool>{op: Op::Or, left: Some(l), right: Some(r), name: None}}
+    pub fn val_node(in_val: bool, in_name: u8) -> Node<'static, bool> {Node::<bool>{op: Op::Val(in_val), left: None, right: None, name: Some(in_name)}}
+    pub fn not_val_node(in_val: bool, in_name: u8) -> Node<'static, bool> {Node::<bool>{op: Op::Val(!in_val), left: None, right: None, name: Some(in_name)}}
 }
 
 pub struct BooleanTree<'a, T>{root: Node<'a, T>}
 
 impl BooleanTree<'_, bool>{
-
     pub fn new(in_node: Node<bool>) -> BooleanTree<bool> {BooleanTree{root: in_node}}
 
-    pub fn to_json(&self) -> Value{
-        self.root.to_json()
+    pub fn to_str(&self) -> String{
+        let buffer = Vec::new();
+        self.root.to_str(buffer, 0, false).join("\n")
+    }
+
+    pub fn to_json(&self) -> String{
+        serde_json::to_string_pretty(&self.root.to_json()).unwrap()
     }
 
     pub fn to_exp(&self) -> String{
@@ -119,38 +161,20 @@ impl BooleanTree<'_, bool>{
         let mut l: Option<bool> = None;
         let mut r: Option<bool> = None;
 
-        //TODO - see about new implementation without needing `let`
         if let Some(left) = &cur_node.left {
             l = Some(BooleanTree::resolve_node(left));
         }
-        //TODO - see about new implementation without needing `let`
         if let Some(right) = &cur_node.right {
             r = Some(BooleanTree::resolve_node(right));
         }
 
-        //TODO - see about new implementation without needing `let`
         let l: bool = if let Some(x) = l{x} else{false};
-        //TODO - see about new implementation without needing `let`
         let r: bool = if let Some(x) = r{x} else{false};
 
         match cur_node.op{
             Op::And => {l & r},
             Op::Or => {l | r},
-            Op::Val(x) | Op::Not_Val(x) => x
+            Op::Val(x) => x
         }
     }
-
-    pub fn update_state(in_state: &Vec<bool>){
-
-    }
-
-    pub fn print_tree(&self, index: usize){
-        let mut buffer = Vec::new();
-        buffer = self.root.print(buffer, 0, true);
-        println!("Node: {}", index);
-        for layer in buffer.iter(){
-            println!("{}", layer);
-        }
-    }
-
 }
