@@ -1,21 +1,24 @@
-use serde::{Serialize, Deserialize};
+use serde::{Serialize};
 use serde_json::{json, Value};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize)]
 pub enum Op<T>{
     And,
     Or,
     Val(T)
 }
 
-pub struct Node<'a, T>{
+pub struct Node<T>{
     op: Op<T>,
-    left: Option<&'a Node<'a, T>>,
-    right: Option<&'a Node<'a, T>>,
+    left: Option<Box<Node<T>>>,
+    right: Option<Box<Node<T>>>,
     name: Option<u8>
 }
 
-impl Node<'_, bool>{
+impl Node<bool>{
+    pub fn new(in_op: Op<bool>, in_left: Node<bool>, in_right: Node<bool>) -> Node<bool> {
+        Node{op: in_op, left: Some(Box::new(in_left)), right: Some(Box::new(in_right)), name: None}
+    }
 
     fn to_str(&self, mut buffer: Vec<String>, layer: usize, lr: bool) -> Vec<String>{
 
@@ -77,30 +80,25 @@ impl Node<'_, bool>{
 
         let l;
 
-        if let Some(x) = self.left{
+        if let Some(x) = &self.left{
             l = x.to_json();
         }else{
-            return json!({
-                "op": self.op,
-                "name": self.name
-            })
+            l = Value::from("None");
         }
 
         let r;
 
-        if let Some(x) = self.right{
+        if let Some(x) = &self.right{
             r = x.to_json();
         }else{
-            return json!({
-                "op": self.op,
-                "name": self.name
-            })
+            r = Value::from("None");
         }
 
         json!({
             "op": self.op,
             "left": l,
-            "right": r
+            "right": r,
+            "name": self.name
         })
     }
 
@@ -108,7 +106,7 @@ impl Node<'_, bool>{
 
         let l;
 
-        if let Some(x) = self.left{
+        if let Some(x) = &self.left{
             l = x.to_exp();
         }else{
             l = "".to_string();
@@ -116,7 +114,7 @@ impl Node<'_, bool>{
 
         let r;
 
-        if let Some(x) = self.right{
+        if let Some(x) = &self.right{
             r = x.to_exp();
         }else{
             r = "".to_string();
@@ -129,16 +127,17 @@ impl Node<'_, bool>{
         }
     }
 
-    pub fn and_node<'a>(l: &'a Node<'a, bool>, r: &'a Node<'a, bool>) -> Node<'a, bool> {Node::<bool>{op: Op::And, left: Some(l), right: Some(r), name: None}}
-    pub fn or_node<'a>(l: &'a Node<'a, bool>, r: &'a Node<'a, bool>) -> Node<'a, bool> {Node::<bool>{op: Op::Or, left: Some(l), right: Some(r), name: None}}
-    pub fn val_node(in_val: bool, in_name: u8) -> Node<'static, bool> {Node::<bool>{op: Op::Val(in_val), left: None, right: None, name: Some(in_name)}}
-    pub fn not_val_node(in_val: bool, in_name: u8) -> Node<'static, bool> {Node::<bool>{op: Op::Val(!in_val), left: None, right: None, name: Some(in_name)}}
 }
 
-pub struct BooleanTree<'a, T>{root: Node<'a, T>}
+pub fn and_node(l: Node<bool>, r: Node<bool>) -> Node<bool> {Node::new(Op::And, l, r)}
+pub fn or_node(l: Node<bool>, r: Node<bool>) -> Node<bool> {Node::new(Op::Or, l, r)}
+pub fn val_node(in_val: bool, in_name: u8) -> Node<bool> {Node::<bool>{op: Op::Val(in_val), left: None, right: None, name: Some(in_name)}}
+pub fn not_val_node(in_val: bool, in_name: u8) -> Node<bool> {Node::<bool>{op: Op::Val(!in_val), left: None, right: None, name: Some(in_name)}}
 
-impl BooleanTree<'_, bool>{
-    pub fn new(in_node: Node<bool>) -> BooleanTree<bool> {BooleanTree{root: in_node}}
+pub struct BooleanTree<T>{nodes: Option<Vec<Node<T>>>, root: Node<T>}
+
+impl BooleanTree<bool>{
+    pub fn new(in_node: Node<bool>) -> BooleanTree<bool> {BooleanTree{nodes: None, root: in_node}}
 
     pub fn to_str(&self) -> String{
         let buffer = Vec::new();
