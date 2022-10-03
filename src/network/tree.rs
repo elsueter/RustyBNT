@@ -20,6 +20,7 @@ impl Node<bool>{
         Node{op: in_op, left: Some(Box::new(in_left)), right: Some(Box::new(in_right)), name: None}
     }
 
+    //string export stuff
     fn to_str(&self, mut buffer: Vec<String>, layer: usize, lr: bool) -> Vec<String>{
 
         let mut curr = "".to_string();
@@ -75,7 +76,6 @@ impl Node<bool>{
 
         return buffer;
     }
-
     fn to_json(&self) -> Value{
 
         let l;
@@ -101,7 +101,6 @@ impl Node<bool>{
             "name": self.name
         })
     }
-
     fn to_exp(&self) -> String{
 
         let l;
@@ -139,41 +138,37 @@ pub struct BooleanTree<T>{nodes: Option<Vec<Node<T>>>, root: Node<T>}
 impl BooleanTree<bool>{
     pub fn new(in_node: Node<bool>) -> BooleanTree<bool> {BooleanTree{nodes: None, root: in_node}}
 
-    pub fn to_str(&self) -> String{
-        let buffer = Vec::new();
-        self.root.to_str(buffer, 0, false).join("\n")
-    }
-
-    pub fn to_json(&self) -> String{
-        serde_json::to_string_pretty(&self.root.to_json()).unwrap()
-    }
-
-    pub fn to_exp(&self) -> String{
-        self.root.to_exp()
-    }
-
     pub fn resolve(&self) -> bool {
         Self::resolve_node(&self.root)
     }
 
     fn resolve_node(cur_node: &Node<bool>) -> bool {
-        let mut l: Option<bool> = None;
-        let mut r: Option<bool> = None;
+        let l = match &cur_node.left{
+            Some(x) => BooleanTree::resolve_node(x),
+            None => false
+        };
 
-        if let Some(left) = &cur_node.left {
-            l = Some(BooleanTree::resolve_node(left));
-        }
-        if let Some(right) = &cur_node.right {
-            r = Some(BooleanTree::resolve_node(right));
-        }
-
-        let l: bool = if let Some(x) = l{x} else{false};
-        let r: bool = if let Some(x) = r{x} else{false};
+        let r = match &cur_node.right{
+            Some(x) => BooleanTree::resolve_node(x),
+            None => false
+        };
 
         match cur_node.op{
             Op::And => {l & r},
             Op::Or => {l | r},
             Op::Val(x) => x
         }
+    }
+
+    //string export stuff
+    pub fn to_str(&self) -> String{
+        let buffer = Vec::new();
+        self.root.to_str(buffer, 0, false).join("\n")
+    }
+    pub fn to_json(&self) -> String{
+        serde_json::to_string_pretty(&self.root.to_json()).unwrap()
+    }
+    pub fn to_exp(&self) -> String{
+        self.root.to_exp()
     }
 }
