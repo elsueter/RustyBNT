@@ -143,20 +143,27 @@ impl BooleanTree<bool>{
     }
 
     fn resolve_node(cur_node: &Node<bool>) -> bool {
-        let l = match &cur_node.left{
-            Some(x) => BooleanTree::resolve_node(x),
-            None => false
-        };
-
-        let r = match &cur_node.right{
-            Some(x) => BooleanTree::resolve_node(x),
-            None => false
-        };
-
         match cur_node.op{
-            Op::And => {l & r},
-            Op::Or => {l | r},
+            Op::And => {
+                BooleanTree::resolve_node_child(&cur_node.left) 
+                & 
+                BooleanTree::resolve_node_child(&cur_node.right)
+            },
+
+            Op::Or => {
+                BooleanTree::resolve_node_child(&cur_node.left)
+                | 
+                BooleanTree::resolve_node_child(&cur_node.right)
+            },
+
             Op::Val(x) => x
+        }
+    }
+
+    fn resolve_node_child(cur_node: &Option<Box<Node<bool>>>)-> bool {
+        match &cur_node{
+            Some(x) => BooleanTree::resolve_node(x),
+            None => false
         }
     }
 
