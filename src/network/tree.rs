@@ -1,181 +1,39 @@
-use serde::{Serialize};
-use serde_json::{json, Value};
-
-#[derive(Serialize)]
-pub enum Op<T>{
+pub enum Op{
     And,
     Or,
-    Val(T)
+    Not,
+    Val
 }
 
-pub struct Node<T>{
-    op: Op<T>,
-    left: Option<Box<Node<T>>>,
-    right: Option<Box<Node<T>>>,
-    name: Option<u8>
+pub struct Node{
+    op: Op,
+    val: bool,
+    id: usize
 }
 
-impl Node<bool>{
-    pub fn new(in_op: Op<bool>, in_left: Node<bool>, in_right: Node<bool>) -> Node<bool> {
-        Node{op: in_op, left: Some(Box::new(in_left)), right: Some(Box::new(in_right)), name: None}
-    }
+impl Node{
+    pub fn new(in_op: Op, in_id: usize) -> Node {Node{val: false, op: in_op, id: in_id}}
+}
 
-    //string export stuff
-    fn to_str(&self, mut buffer: Vec<String>, layer: usize, lr: bool) -> Vec<String>{
+pub fn and_node() -> Node {Node::new(Op::And, usize::MAX)}
+pub fn or_node() -> Node {Node::new(Op::Or, usize::MAX)}
+pub fn not_node(in_id: usize) -> Node {Node::new(Op::Not, in_id)}
+pub fn val_node(in_id: usize) -> Node {Node::new(Op::Val, in_id)}
 
-        let mut curr = "".to_string();
+pub struct Tree{nodes: Vec<Node>}
 
-        if(buffer.len() < layer+1){
-            buffer.push("".to_string());
-        }
-        
-        if(lr){
-            curr.push_str(&"|-".to_string())
-        }else{
-            curr.push_str(&"\\-".to_string())
-        }
+impl Tree{
+    pub fn new(in_nodes: Vec<Node>) -> Tree {Tree{nodes: in_nodes}}
 
-        match self.op{
-            Op::And => {
-                curr.push_str(&"And ".to_string());
-                if(layer > 0){
-                    buffer[layer-1].push_str(&"  ".to_string());
-                }
-            },
-            Op::Or => {
-                curr.push_str(&"Or  ".to_string());
-                if(layer > 0){
-                    buffer[layer-1].push_str(&"   ".to_string());
-                }
-            },
-            Op::Val(x) => {
-                if let Some(value) = self.name{ 
-                    curr.push_str(&format!("{}", value));
-                }else{
-                    curr.push_str(&"".to_string());
-                }
-                if(lr){
-                    if(buffer.len() < layer+2){
-                        buffer.push("   ".to_string());
-                    }else{
-                        buffer[layer+1].push_str(&"   ".to_string());
-                    }
-                }
+    pub fn resolve(&mut self, cur_state: Vec<bool>) -> bool{
+        for i in (0..self.nodes.len()).rev(){
+            match self.nodes[i].op{
+                Op::And => self.nodes[i].val = self.nodes[i*2].val & self.nodes[(i*2)+1].val,
+                Op::Or => self.nodes[i].val = self.nodes[i*2].val | self.nodes[(i*2)+1].val,
+                Op::Not => self.nodes[i].val = !cur_state[self.nodes[i].id],
+                Op::Val => self.nodes[i].val = cur_state[self.nodes[i].id]
             }
         }
-        buffer[layer].push_str(&curr);
-
-        //TODO - see about new implementation without needing `let`
-        if let Some(left) = &self.left {
-            buffer = left.to_str(buffer, layer+1, true);
-        }
-        //TODO - see about new implementation without needing `let`
-        if let Some(right) = &self.right {
-            buffer = right.to_str(buffer, layer+1, false);
-        }
-
-        return buffer;
-    }
-    fn to_json(&self) -> Value{
-
-        let l;
-
-        if let Some(x) = &self.left{
-            l = x.to_json();
-        }else{
-            l = Value::from("None");
-        }
-
-        let r;
-
-        if let Some(x) = &self.right{
-            r = x.to_json();
-        }else{
-            r = Value::from("None");
-        }
-
-        json!({
-            "op": self.op,
-            "left": l,
-            "right": r,
-            "name": self.name
-        })
-    }
-    fn to_exp(&self) -> String{
-
-        let l;
-
-        if let Some(x) = &self.left{
-            l = x.to_exp();
-        }else{
-            l = "".to_string();
-        }
-
-        let r;
-
-        if let Some(x) = &self.right{
-            r = x.to_exp();
-        }else{
-            r = "".to_string();
-        }
-
-        match self.op{
-            Op::And => format!("{}&{}", l, r),
-            Op::Or => format!("{}|{}", l, r),
-            Op::Val(x) => self.name.unwrap().to_string()
-        }
-    }
-
-}
-
-pub fn and_node(l: Node<bool>, r: Node<bool>) -> Node<bool> {Node::new(Op::And, l, r)}
-pub fn or_node(l: Node<bool>, r: Node<bool>) -> Node<bool> {Node::new(Op::Or, l, r)}
-pub fn val_node(in_val: bool, in_name: u8) -> Node<bool> {Node::<bool>{op: Op::Val(in_val), left: None, right: None, name: Some(in_name)}}
-pub fn not_val_node(in_val: bool, in_name: u8) -> Node<bool> {Node::<bool>{op: Op::Val(!in_val), left: None, right: None, name: Some(in_name)}}
-
-pub struct BooleanTree<T>{nodes: Option<Vec<Node<T>>>, root: Node<T>}
-
-impl BooleanTree<bool>{
-    pub fn new(in_node: Node<bool>) -> BooleanTree<bool> {BooleanTree{nodes: None, root: in_node}}
-
-    pub fn resolve(&self) -> bool {
-        Self::resolve_node(&self.root)
-    }
-
-    fn resolve_node(cur_node: &Node<bool>) -> bool {
-        match cur_node.op{
-            Op::And => {
-                BooleanTree::resolve_node_child(&cur_node.left) 
-                & 
-                BooleanTree::resolve_node_child(&cur_node.right)
-            },
-
-            Op::Or => {
-                BooleanTree::resolve_node_child(&cur_node.left)
-                | 
-                BooleanTree::resolve_node_child(&cur_node.right)
-            },
-
-            Op::Val(x) => x
-        }
-    }
-
-    fn resolve_node_child(cur_node: &Option<Box<Node<bool>>>)-> bool {
-        match &cur_node{
-            Some(x) => BooleanTree::resolve_node(x),
-            None => false
-        }
-    }
-
-    //string export stuff
-    pub fn to_str(&self) -> String{
-        let buffer = Vec::new();
-        self.root.to_str(buffer, 0, false).join("\n")
-    }
-    pub fn to_json(&self) -> String{
-        serde_json::to_string_pretty(&self.root.to_json()).unwrap()
-    }
-    pub fn to_exp(&self) -> String{
-        self.root.to_exp()
+        self.nodes[0].val
     }
 }
