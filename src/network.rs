@@ -2,41 +2,43 @@ mod tree;
 mod exp_parser;
 
 pub fn create_network(in_string: String) -> Vec<tree::Tree>{
-    let shunted_string = exp_parser::shunt_expression(in_string);
+    let tokens = exp_parser::extract_tokens(&in_string);
+
+    println!("{:?}", tokens);
 
     let mut temp: Vec<tree::Node> = vec![];
     let mut flag = false;
     let mut skip = false;
     
-    for (i, c) in shunted_string[0].iter().enumerate(){
-        match c{
-            38 =>  temp.push(tree::and_node()),
-            124 =>  temp.push(tree::or_node()),
-            _ => (),
-        }
-    }
+    // for c in shunted_string[0].iter(){
+    //     match c{
+    //         38 =>  temp.push(tree::and_node()),
+    //         124 =>  temp.push(tree::or_node()),
+    //         _ => (),
+    //     }
+    // }
 
-    let offset = temp.len();
+    // let offset = temp.len();
 
-    for (i, c) in shunted_string[1].iter().enumerate(){
+    // for c in shunted_string[1].iter(){
 
-        if skip{
-            skip = false;
-            continue;
-        }
-        if c == &61{
-            flag = true;
-            continue;
-        }
-        if flag{
-            if c == &33{
-                temp.push(tree::not_node(temp.len()-offset+1));
-                skip = true;
-                continue;
-            }
-            temp.push(tree::val_node(temp.len()-offset+1));
-        }
-    }
+    //     if skip{
+    //         skip = false;
+    //         continue;
+    //     }
+    //     if c == &61{
+    //         flag = true;
+    //         continue;
+    //     }
+    //     if flag{
+    //         if c == &33{
+    //             temp.push(tree::not_node(temp.len()-offset+1));
+    //             skip = true;
+    //             continue;
+    //         }
+    //         temp.push(tree::val_node(temp.len()-offset+1));
+    //     }
+    // }
 
     vec![tree::Tree::new(temp)]
 }
