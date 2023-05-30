@@ -4,8 +4,6 @@ pub struct Token{
     pub val: Vec<u8>
 }
 
-// F(A) = !B & C | D
-
 pub fn extract_tokens(in_string: &String) -> Vec<Token> {
     let mut tokens: Vec<Token> = vec![];
     let mut operators: Vec<Token> = vec![];
