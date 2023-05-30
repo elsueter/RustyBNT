@@ -29,14 +29,23 @@ impl Tree{
     pub fn new(in_nodes: Vec<Node>) -> Tree {Tree{nodes: in_nodes}}
 
     pub fn resolve(&mut self, cur_state: Vec<bool>) -> bool{
-        for i in (0..self.nodes.len()).rev(){
-            match self.nodes[i].op{
-                Op::And => self.nodes[i].val = self.nodes[i<<1].val & self.nodes[(i<<1)+1].val,
-                Op::Or => self.nodes[i].val = self.nodes[i<<1].val | self.nodes[(i<<1)+1].val,
-                Op::Not => self.nodes[i].val = !cur_state[self.nodes[i].id],
-                Op::Val => self.nodes[i].val = cur_state[self.nodes[i].id]
+        let mut buffer: Vec<bool> = vec![];
+        for node in self.nodes.iter(){
+            match node.op{
+                Op::And =>{
+                    let a = buffer.pop().unwrap();
+                    let b = buffer.pop().unwrap();
+                    buffer.push(a & b);
+                },
+                Op::Or => {
+                    let a = buffer.pop().unwrap();
+                    let b = buffer.pop().unwrap();
+                    buffer.push(a | b);
+                },
+                Op::Not => buffer.push(!cur_state[node.id]),
+                Op::Val => buffer.push(cur_state[node.id]),
             }
         }
-        self.nodes[0].val
+        buffer[0]
     }
 }
