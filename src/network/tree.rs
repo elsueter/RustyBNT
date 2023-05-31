@@ -28,7 +28,7 @@ pub struct Tree{nodes: Vec<Node>}
 impl Tree{
     pub fn new(in_nodes: Vec<Node>) -> Tree {Tree{nodes: in_nodes}}
 
-    pub fn resolve(&mut self, cur_state: Vec<bool>) -> bool{
+    pub fn resolve(&mut self, cur_state: &Vec<bool>) -> bool{
         let mut buffer: Vec<bool> = vec![];
         for node in self.nodes.iter(){
             match node.op{
