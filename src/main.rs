@@ -9,7 +9,5 @@ fn main() {
         ]);
     let temp = network.resolve(Vec::from([true, false, true, false]));
 
-    // println!("{:?}", network.trees[3]);
-
     println!("{} {} {} {}", temp[0], temp[1], temp[2], temp[3]);
 }

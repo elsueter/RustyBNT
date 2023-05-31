@@ -1,16 +1,14 @@
-#[derive(Debug, Clone)]
+#[derive(Debug)]
+//utility struct to hold a 'token' along with an associated id
 pub struct Token{
     pub id: usize,
     pub val: Vec<u8>
 }
 
-impl PartialEq for Token {
-    fn eq(&self, other: &Self) -> bool {
-        self.val == other.val
-    }
-}
-
+//taken an infix string and returns a vector of 'tokens' in postfix notation
 pub fn to_postfix(in_string: &String) -> Vec<Token> {
+
+    //TODO lots of empty vector allocations, precalculation of size and use of arrays might help here
     let mut tokens: Vec<Token> = vec![];
     let mut operators: Vec<Token> = vec![];
 
