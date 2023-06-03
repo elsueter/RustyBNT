@@ -9,9 +9,20 @@ pub struct Network{
     index: usize,
 }
 
+type State = Vec<bool>;
+
 impl Network{
-    pub fn resolve(&mut self, cur_state: Vec<bool>) -> Vec<bool>{
-        let mut result: Vec<bool> = vec![false; 4];
+
+    pub fn resolve_node(&mut self, cur_state: &State, node: usize) -> Vec<bool>{
+        //this could maybe be improved?
+        let mut result: Vec<bool> = cur_state.to_vec();
+        result[node] = self.trees[node].resolve(&cur_state);
+        result
+    }
+
+    pub fn resolve_all(&mut self, cur_state: &State) -> Vec<bool>{
+        //this could maybe be improved?
+        let mut result: Vec<bool> = vec![false; cur_state.len()];
         for i in (0..self.trees.len()) {
             result[i] = self.trees[i].resolve(&cur_state);
         }
@@ -29,6 +40,7 @@ impl Network{
         self.index += 1;
         return self.index -1;
     }
+
 }
 
 
